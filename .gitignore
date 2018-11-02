@@ -1,0 +1,5 @@
+output/
+extract/wet_files
+cmake*
+.idea
+.DS_Store
