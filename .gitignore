@@ -1,5 +1,6 @@
 output/
 extract/wet_files
+extract/test.py
 cmake*
 .idea
 .DS_Store

@@ -7,6 +7,7 @@
 using namespace std;
 
 double cosine_measure(int length, int N, int f_t, int f_d_t) {
+    if (length == 0) return 0;
     return log(1 + 1.0 * N / f_t) * (1 + log(f_d_t)) / sqrt(length);
 }
 void solve(string term, IndexReader& reader, map<int, double>& score) {
@@ -29,7 +30,7 @@ void Query(vector<string> query, IndexReader& reader) {
     for (auto term : query) {
         solve(term, reader, score);
     }
-    int top = 20;
+    int top = 10;
     priority_queue<pair<double, int>> pq;
     for (auto pair : score) {
         double value = pair.second, uid = pair.first;
@@ -53,6 +54,7 @@ void Query(vector<string> query, IndexReader& reader) {
         int uid = pair.first;
         double value = pair.second;
         string url = reader.getUrl(uid);
+        if (url.size() < 4 || url.substr(0, 4) != "http") continue;
         auto payload = reader.getPayload(uid);
         cout << reader.getUrl(pair.first) << " " << value << endl;
         for (auto word: payload) {
@@ -78,6 +80,6 @@ int main() {
         }
         Query(terms, reader);
     }
-    Query({"student"}, reader);
+//    Query({"student"}, reader);
     return 0;
 }

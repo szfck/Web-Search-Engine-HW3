@@ -2,6 +2,7 @@
 #include <fstream>
 #include <vector>
 #include <map>
+#include <unordered_map>
 using namespace std;
 
 const int BLOCK = 128;
@@ -10,10 +11,14 @@ struct Url {
     int uid;
     string url;
     int length;
-//    int content_start_byte, content_end_byte;
+    long long content_start_byte, content_end_byte;
 
-    Url(int uid, string url, int length) :
-    uid(uid), url(url), length(length) {}
+//    Url(int uid, string url, int length) :
+//    uid(uid), url(url), length(length) {}
+
+    Url(int uid, string url, int length, long long content_start_byte, long long content_end_byte) : uid(
+            uid), url(url), length(length), content_start_byte(content_start_byte), content_end_byte(
+            content_end_byte) {}
 
 };
 
@@ -26,9 +31,11 @@ struct Term {
 };
 
 struct Index {
-    int tid, start, end, number;
+    int tid;
+    long long start, end;
+    int number;
     Index() {}
-    Index(int tid, int start, int end, int number) : 
+    Index(int tid, long long int start, long long int end, int number) :
         tid(tid), start(start), end(end), number(number) {}
 };
 
@@ -40,14 +47,14 @@ struct Doc {
 
 class Writer {
 protected:
-    int offset;
+    long long offset;
     ofstream out;
 public:
     Writer();
     Writer(string file_name);
     void open(string file_name);
     void close();
-    int getOffset();
+    long long getOffset();
     void vwrite(int x);
     void swrite(string s);
     void vwriteList(int tid, const vector<Doc>& list);
@@ -62,8 +69,8 @@ public:
     void open(string file_name);
     void close();
 
-    vector<int> vread(int start, int end);
-    vector<Doc> vreadList(int tid, int start, int end, int number);
+    vector<int> vread(long long start, long long end);
+    vector<Doc> vreadList(int tid, long long start, long long end, int number);
     vector<Url> urlread();
     vector<Term> termread();
     vector<Index> indexread();
@@ -76,8 +83,8 @@ private:
     vector<Term> term_table;
     vector<Url> url_table;
     vector<Index> index_table;
-    map<string, int> terms;
-    map<int, vector<Doc>> cached;
+    unordered_map<string, int> terms;
+    unordered_map<int, vector<Doc>> cached;
     vector<Doc> docs;
     int pointer;
 

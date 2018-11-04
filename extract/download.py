@@ -9,7 +9,7 @@ with open('wet.paths', 'r') as f:
     file_paths = f.readlines()
 
 # get the first 100 (feel free to customize)
-first_100 = ['https://commoncrawl.s3.amazonaws.com/' + path.strip('\n') for path in file_paths[:5]]
+first_100 = ['https://commoncrawl.s3.amazonaws.com/' + path.strip('\n') for path in file_paths[:100]]
 
 # download the files and store them in the wet_files directory
 i = 0

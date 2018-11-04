@@ -25,7 +25,7 @@ void Writer::close() {
     out.close();
 }
 
-int Writer::getOffset() {
+long long Writer::getOffset() {
     return offset;
 }
 
@@ -80,9 +80,9 @@ void Reader::close() {
     in.close();
 }
 
-vector<int> Reader::vread(int start, int end) {
+vector<int> Reader::vread(long long start, long long end) {
     in.seekg(start);
-    int len = end - start;
+    long long len = end - start;
     string s;
     s.resize(len);
     in.read(&s[0], len);
@@ -101,11 +101,18 @@ vector<int> Reader::vread(int start, int end) {
     return arr;
 }
 
-vector<Doc> Reader::vreadList(int tid, int start, int end, int number) {
+vector<Doc> Reader::vreadList(int tid, long long start, long long end, int number) {
     auto list = vread(start, end);
     int n = (int) list.size();
-    assert (tid == list[0]);
+    if (tid != list[0]) {
+        cout << "tid: " << tid << " " << list[0] << endl;
+    }
+     assert (tid == list[0]);
+    if (number != list[1]) {
+        cout << "number: " << number << " " << list[1] << endl;
+    }
     assert (number == list[1]);
+
     assert (number == (n - 2) / 2);
     assert (n % 2 == 0);
     vector<Doc> docs(number);
@@ -117,6 +124,10 @@ vector<Doc> Reader::vreadList(int tid, int start, int end, int number) {
             cnt++;
         }
     }
+//    for (auto doc : docs) {
+//        cout << doc.uid << " " << doc.freq << " ";
+//    }
+//    cout << endl;
     assert (cnt == number);
     return docs;
 }
@@ -128,8 +139,9 @@ vector<Url> Reader::urlread() {
         stringstream ss(line);
         int uid, length;
         string url;
-        ss >> uid >> url >> length;
-        urls.emplace_back(uid, url, length);
+        long long start, end;
+        ss >> uid >> url >> length >> start >> end;
+        urls.emplace_back(uid, url, length, start, end);
     }
     return urls;
 }
@@ -152,8 +164,14 @@ vector<Index> Reader::indexread() {
     string line = "";
     while (getline(in, line)) {
         stringstream ss(line);
-        int tid, start, end, number;
+        int tid;
+        long long start, end;
+        int number;
         ss >> tid >> start >> end >> number;
+        while (tid > (int) indexes.size()) { // non exist tid
+            indexes.emplace_back(0, 0, 0, 0);
+        }
+        assert (tid == (int) indexes.size());
         indexes.emplace_back(tid, start, end, number);
     }
     return indexes;
@@ -165,7 +183,7 @@ IndexReader::IndexReader() {
     const string index_bin_path = OUTPUT + "intermediate-output-3/" + "index-00000.merge1.bin";
     const string term_table_path = OUTPUT + "term_table.txt";
     const string url_table_path = OUTPUT + "url_table.txt";
-//    const string content_bin_path = OUTPUT + "url_content.bin";
+    const string content_bin_path = OUTPUT + "url_content.bin";
 
     Reader term_table_reader(term_table_path);
     term_table = term_table_reader.termread();
@@ -183,7 +201,7 @@ IndexReader::IndexReader() {
     index_reader.close();
 
     index_bin.open(index_bin_path);
-//    content_bin.open(content_bin_path);
+    content_bin.open(content_bin_path);
 }
 
 int IndexReader::openList(string term) {
@@ -221,7 +239,10 @@ void IndexReader::closeList(string term) {
 int IndexReader::nextGEQ(int uid) {
     if (pointer >= (int) docs.size()) return NOT_FOUND;
     int next = docs[pointer++].uid;
-    assert (uid < next);
+    if (uid > next) {
+        cout << "uid : " << uid << " next: " << next << endl;
+    }
+    assert (uid <= next);
     return next;
 }
 
@@ -230,15 +251,15 @@ int IndexReader::getFreq() {
 }
 
 vector<string> IndexReader::getPayload(int uid) {
-//    vector<int> list = content_bin.vread(
-//            url_table[uid].content_start_byte,
-//            url_table[uid].content_end_byte);
-//    vector<string> words;
-//    for (int tid : list) {
-//        words.push_back(term_table[tid].term);
-//    }
-//    return words;
-    return {"hello", "world"};
+    vector<int> list = content_bin.vread(
+            url_table[uid].content_start_byte,
+            url_table[uid].content_end_byte);
+    vector<string> words;
+    for (int tid : list) {
+        words.push_back(term_table[tid].term);
+    }
+    return words;
+//    return {"hello", "world"};
 }
 
 int IndexReader::getLength(int uid) {

@@ -15,10 +15,11 @@ using namespace std;
 char ch;
 
 const string END = "===============";
+const string ENDD = "szfck" + END + "szfck" + "@@@@@";
 const string OUTPUT = "../output/"; // output dir
 const string URL_TABLE_PATH = OUTPUT + "url_table.txt";
 const string TERM_TABLE_PATH = OUTPUT + "term_table.txt";
-//const string URL_CONTENT_PATH = OUTPUT + "url_content.bin";
+const string URL_CONTENT_PATH = OUTPUT + "url_content.bin";
 const string PREV_OUTPUT = OUTPUT + "intermediate-output-1/";
 const string CUR_OUTPUT = OUTPUT + "intermediate-output-2/";
 map<string, int> url_map;
@@ -50,11 +51,11 @@ string getNum(int x) {
     return num;
 }
 
-string str(int x) {
+string str(long long x) {
     return to_string(x);
 }
 
-void build(int id) {
+void build(int id, Writer& url_content_writer) {
     string id_str = getNum(id);
     string input_filename = PREV_OUTPUT + id_str + ".txt";
     ifstream input_file;
@@ -75,10 +76,10 @@ void build(int id) {
         map<int, int> freq; // for this doc
         // read doc
 
-//        int content_start_byte = url_content_writer.getOffset();
-//        vector<int> words_id;
+        long long content_start_byte = url_content_writer.getOffset();
+        vector<int> words_id;
         while (getline(input_file, line)) {
-            if (line == END) {
+            if (line == ENDD) {
                 string len;
                 getline(input_file, len);
                 int length = 0;
@@ -86,19 +87,22 @@ void build(int id) {
                     length = stoi(len);
                 } catch (const std::exception& e) {
                     cout << url << " " << e.what() << endl;
+                    cout << len << endl;
                     break;
                 }
-//                for (int id : words_id) {
-//                    url_content_writer.vwrite(id);
-//                }
-//                int content_end_byte = url_content_writer.getOffset();
-                urls.emplace_back(uid, url, length);
+                for (int id : words_id) {
+                    url_content_writer.vwrite(id);
+                }
+                long long content_end_byte = url_content_writer.getOffset();
+                urls.emplace_back(uid, url, length, content_start_byte, content_end_byte);
                 url_map[url] = uid;
                 for (auto p : freq) { // in uid
                     int tid = p.first, fre = p.second;
                     words[tid].emplace_back(uid, fre);
                 }
                 break;
+            } else if (line == END) {
+                cout << "id: " << id << " url: " << url << " " << line << endl;
             }
 
             int pos = 0;
@@ -109,7 +113,7 @@ void build(int id) {
                     terms.emplace_back(term_map[term], term);
                 }
                 int tid = term_map[term];
-//                words_id.push_back(tid);
+                words_id.push_back(tid);
                 freq[tid]++;
             }
 
@@ -119,12 +123,12 @@ void build(int id) {
     Writer index(CUR_OUTPUT + "index-" + id_str + ".bin");
     Writer term_index(CUR_OUTPUT + "index-" + id_str + ".txt");
     for (auto& word : words) {
-        int start = index.getOffset();
+        long long start = index.getOffset();
         int tid = word.first;
         auto& list = word.second;
         int number = (int) list.size();
         index.vwriteList(tid, list);
-        int end = index.getOffset();
+        long long end = index.getOffset();
         term_index.swrite(str(tid) + " " + str(start) + " " + str(end) + " " + str(number) + '\n');
     }
     index.close();
@@ -160,18 +164,19 @@ int main(int argc, char *argv[]) {
 //    int lower = 0, upper = 2;
     cout << "start build index for file [" << lower << " to " << upper << ")" << endl;
 
-//    Writer url_content_writer(URL_CONTENT_PATH);
+    Writer url_content_writer(URL_CONTENT_PATH);
     for (int i = lower; i < upper; i++) {
-//        build(i, url_content_writer);
-        build(i);
+        build(i, url_content_writer);
+//        build(i);
     }
-//    url_content_writer.close();
+    url_content_writer.close();
 
     cout << "write back to url_table..." << endl;
 
     Writer url_writer(URL_TABLE_PATH);
     for (auto url : urls) {
-        url_writer.swrite(str(url.uid) + " " + url.url + " " + str(url.length) + '\n');
+        url_writer.swrite(str(url.uid) + " " + url.url + " " + str(url.length) +
+        + " " + str(url.content_start_byte) + " " + str(url.content_end_byte) + '\n');
     }
     url_writer.close();
 

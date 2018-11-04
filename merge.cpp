@@ -24,7 +24,7 @@ struct Node {
     }
 };
 
-string str(int x) {
+string str(long long x) {
     return to_string(x);
 }
 // add term to priority queue
@@ -45,13 +45,13 @@ void addToQue(int fid, priority_queue<Node>& pq, map<int, vector<Doc>>& mp, Read
 
 void output(int tid, map<int, vector<Doc>>& mp, Writer& merged_index, Writer& merged_term_index) {
     // cout << "output : " << tid << endl;
-    int start = merged_index.getOffset();
+    long long start = merged_index.getOffset();
     auto& list = mp[tid];
     sort(list.begin(), list.end(), [] (const Doc& doc1, const Doc& doc2) {
         return doc1.uid < doc2.uid;
     });
     merged_index.vwriteList(tid, mp[tid]);
-    int end = merged_index.getOffset();
+    long long end = merged_index.getOffset();
     merged_term_index.swrite(str(tid) + " " + str(start) + " " + str(end) + " " + str(mp[tid].size()) + '\n');
 }
 
