@@ -56,6 +56,7 @@ string str(long long x) {
 }
 
 void build(int id, Writer& url_content_writer) {
+    cout << "processing: " << id << endl;
     string id_str = getNum(id);
     string input_filename = PREV_OUTPUT + id_str + ".txt";
     ifstream input_file;
@@ -68,6 +69,17 @@ void build(int id, Writer& url_content_writer) {
         if (line == "") continue;
         //get url
         url = line;
+        if (url.size() < 4 || url.substr(0, 4) != "http") {
+            cout << "id : " << id << " " << "wrong url : " << url << endl;
+            while (true) {
+                getline(input_file, line);
+                if (line == ENDD) {
+                    getline(input_file, line);
+                    break;
+                }
+            }
+            continue;
+        }
         if (url_map.find(url) == url_map.end()) {
             url_map[url] = (int) urls.size();
         }
@@ -101,9 +113,10 @@ void build(int id, Writer& url_content_writer) {
                     words[tid].emplace_back(uid, fre);
                 }
                 break;
-            } else if (line == END) {
-                cout << "id: " << id << " url: " << url << " " << line << endl;
             }
+//            else if (line == END) {
+//                cout << "id: " << id << " url: " << url << " " << line << endl;
+//            }
 
             int pos = 0;
             string term = "";

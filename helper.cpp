@@ -168,10 +168,10 @@ vector<Index> Reader::indexread() {
         long long start, end;
         int number;
         ss >> tid >> start >> end >> number;
-        while (tid > (int) indexes.size()) { // non exist tid
-            indexes.emplace_back(0, 0, 0, 0);
-        }
-        assert (tid == (int) indexes.size());
+//        while (tid > (int) indexes.size()) { // non exist tid
+//            indexes.emplace_back(0, 0, 0, 0);
+//        }
+//        assert (tid == (int) indexes.size());
         indexes.emplace_back(tid, start, end, number);
     }
     return indexes;

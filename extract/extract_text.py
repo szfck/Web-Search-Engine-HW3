@@ -34,7 +34,7 @@ for fn in warc_files:
         if not re.match('^[1-9][0-9]*$', page_size):
             print ('page size : ' + page_size)
             continue
-        if not re.match('http[s]?://(.*?)', url):
+        if not re.match('^http[s]?://(.*?)$', url):
             print ('url : ' + url)
             continue
         text = record.payload.read()
