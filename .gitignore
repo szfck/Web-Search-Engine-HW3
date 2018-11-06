@@ -1,7 +1,7 @@
 output/
 extract/wet_files
 extract/test.py
-cmake*
+cmake-build-debug
 .idea
 .DS_Store
 in.txt
