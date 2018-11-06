@@ -1,0 +1,40 @@
+<!--The content below is only a placeholder and can be replaced.-->
+<div style="text-align:center">
+  <h1>
+    Welcome to {{ title }}!
+  </h1>
+</div>
+
+<div class="row mt-4">
+  <div class="col-3"></div>
+  <div class="col-6">
+    <form>
+      <div class="form-group">
+        <div class="row">
+          <div class = "col-1"></div>
+          <div class = "col-9">
+            <input class="form-control" name="search text" placeholder="search text" [(ngModel)]="search_text">
+          </div>
+          <div class = "col-2">
+            <button type="submit" class="btn btn-primary" (click)="search()">Search</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<hr class="my-4">
+
+<div class="list-group mt-3">
+  <ul *ngFor="let doc of docs">
+    <div class="list-group-item ">
+        <a href="{{doc.url}}">{{ doc.url }}</a>
+
+          <div>
+            [{{doc.score}}] {{ doc.snippet }}
+          </div>
+
+    </div>
+  </ul>
+</div>

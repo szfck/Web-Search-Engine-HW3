@@ -4,3 +4,5 @@ extract/test.py
 cmake*
 .idea
 .DS_Store
+in.txt
+out.txt

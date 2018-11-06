@@ -5,8 +5,11 @@
 #include <cmath>
 #include <sstream>
 #include <set>
+#include <unistd.h>
 using namespace std;
+const bool CMD = false;
 
+const unsigned int microseconds = 1000;
 const string OUTPUT = "../output/";
 const string term_table_path = OUTPUT + "term_table.txt";
 const string url_table_path = OUTPUT + "url_table.txt";
@@ -28,7 +31,10 @@ vector<Term> term_table; // tid -> term
 
 vector<Index> index_table; // tid -> tid, start, end, number
 
-int getTermId(string s) {return terms[s];}
+int getTermId(string s) {
+    if (terms.find(s) == terms.end()) return -1;
+    else return terms[s];
+}
 string getTerm(int tid) {return term_table[tid].term;}
 int getUrlLen(int uid) {return url_table[uid].length;}
 
@@ -41,31 +47,75 @@ void start();
 
 vector<pair<int, double>> Query(vector<string> query); // [{doc Id, score} ...]
 void outputResult(const vector<pair<int, double>>& result, const vector<string>& query);
+vector<string> parseQuery(string query);
 
-int main() {
+int main(int argc, char* argv[]) {
     start();
+
+    string prequery = "";
     while (true) {
-        cout << "please input your query in a line, or quit to exit" << endl;
-        string query;
-        getline(cin, query);
-        if (query == "quit") break;
-        stringstream ss(query);
-        vector<string> query_terms;
-        string word;
-        while (ss >> word) {
-            query_terms.push_back(word);
+        usleep(microseconds);
+        if (CMD) {
+            cout << "please input your query in a line, or quit to exit" << endl;
         }
-        if (cache.find(query_terms) == cache.end()) {
+        string query;
+        if (CMD) {
+            getline(cin, query);
+            if (query == "quit") break;
+
+            vector<string> query_terms = parseQuery(query);
+
             auto result = Query(query_terms);
-            cache[query_terms] = result;
+
             outputResult(result, query_terms);
         } else {
-            cout << "it's already cached" << endl;
-            auto result = cache[query_terms];
-            outputResult(result, query_terms);
+            ifstream in;
+            in.open("../in.txt");
+            string query;
+            getline(in, query);
+            in.close();
+
+            if (query == "") {
+                continue;
+            }
+
+            if (query != prequery) {
+                cout << "get a query " << query << endl;
+                vector<string> query_terms = parseQuery(query);
+                auto result = Query(query_terms);
+                cout << "get result: " << endl;
+                ofstream out;
+                out.open("../out.txt");
+                for (auto pair : result) {
+                    int uid = pair.first;
+                    double value = pair.second;
+                    string url = url_table[uid].url;
+                    auto payload = getPayload(uid);
+                    out << url << endl;
+                    out << value << endl;
+                    string snnipet = getSnippet(payload, query_terms);
+                    out << snnipet << endl;
+                }
+                out.close();
+            }
+            prequery = query;
         }
+
     }
     return 0;
+}
+
+vector<string> parseQuery(string query) {
+    stringstream ss(query);
+    vector<string> query_terms;
+    string word;
+    cout << "parsing..." << endl;
+    while (ss >> word) {
+        query_terms.push_back(word);
+        cout << word << endl;
+    }
+    cout << "parsed" << endl;
+    return query_terms;
 }
 
 struct StreamReader {
@@ -130,19 +180,31 @@ double BM25(int doc_length, const vector<int>& f_d_t, const vector<int>& f_t) {
 
 // DAAT
 vector<pair<int, double>> Query(vector<string> query) {
+    if (cache.find(query) != cache.end()) {
+        return cache[query];
+    }
     int top = 15; // choose top 15
     priority_queue<
             pair<double, int>,
             vector<pair<double, int>>,
             greater<pair<double, int>> > pq;
 
-    int n = query.size();
-    vector<StreamReader> readers(n);
-    vector<int> termIds(n, 0);
+//    int n = query.size();
+    vector<int> termIds;
 
-    for (int i = 0; i < n; i++) {
-        termIds[i] = getTermId(query[i]);
+    for (int i = 0; i < (int) query.size(); i++) {
+        int tid = getTermId(query[i]);
+        if (tid == -1) {
+            cout << "not find " << query[i] << endl;
+            continue;
+        }
+        termIds.push_back(tid);
     }
+    int n = termIds.size();
+    if (n <= 0) {
+        return {};
+    }
+    vector<StreamReader> readers(n);
     for (int i = 0; i < n; i++) {
         readers[i] = openList(termIds[i]);
     }
@@ -189,6 +251,7 @@ vector<pair<int, double>> Query(vector<string> query) {
     }
     reverse(result.begin(), result.end());
 
+    cache[query] = result;
     return result;
 }
 

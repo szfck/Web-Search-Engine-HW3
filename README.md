@@ -22,6 +22,9 @@ make
 # merge [0, 100) indexes to 1 index to intermediate-output-3
 ./merge 1 0 100 0
 cd ..
+
+# add file to communicate with web
+touch in.txt out.txt
 ```
 
 ### Run 
