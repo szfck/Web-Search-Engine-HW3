@@ -13,9 +13,10 @@ const string url_table_path = OUTPUT + "url_table.txt";
 const string index_txt_path = OUTPUT + "intermediate-output-3/" + "index-00000.merge1.txt";
 const string content_bin_path = OUTPUT + "url_content.bin";
 const string index_bin_path = OUTPUT + "intermediate-output-3/" + "index-00000.merge1.bin";
-const int MAXDID = 1e9 + 7;
-int N;
-double doc_length_avg;
+const int MAXDID = 1e9 + 7; // MAX ID of doc, real doc id alway smaller than MAXDID
+int N; // total number of docs
+double doc_length_avg; // average length of total docs
+map<vector<string>, vector<pair<int, double>>> cache; // query cache {"query term1", "term term2"} -> {{doc Id1, score1}, {doc Id2, score2} ... }
 
 vector<Url> url_table; // uid -> url, length, content start, end
 
@@ -38,7 +39,8 @@ string getSnippet(const vector<string>& doc,
 
 void start();
 
-void Query(vector<string> query);
+vector<pair<int, double>> Query(vector<string> query); // [{doc Id, score} ...]
+void outputResult(const vector<pair<int, double>>& result, const vector<string>& query);
 
 int main() {
     start();
@@ -48,12 +50,20 @@ int main() {
         getline(cin, query);
         if (query == "quit") break;
         stringstream ss(query);
-        vector<string> terms;
+        vector<string> query_terms;
         string word;
         while (ss >> word) {
-            terms.push_back(word);
+            query_terms.push_back(word);
         }
-        Query(terms);
+        if (cache.find(query_terms) == cache.end()) {
+            auto result = Query(query_terms);
+            cache[query_terms] = result;
+            outputResult(result, query_terms);
+        } else {
+            cout << "it's already cached" << endl;
+            auto result = cache[query_terms];
+            outputResult(result, query_terms);
+        }
     }
     return 0;
 }
@@ -78,7 +88,6 @@ public:
 
 private:
     Reader index_bin;
-//    vector<Doc> docs;
 };
 
 StreamReader openList(int tid) {
@@ -104,11 +113,6 @@ int nextGEQ(StreamReader& streamReader, int uid) {
     }
 }
 
-//double cosine_measure(int length, int N, int f_t, int f_d_t) {
-//    if (length == 0) return 0;
-//    return log(1 + 1.0 * N / f_t) * (1 + log(f_d_t)) / sqrt(length);
-//}
-
 // f_t : number of doc that contain term t
 // f_d_t: freq of term t in doc d
 double BM25(int doc_length, const vector<int>& f_d_t, const vector<int>& f_t) {
@@ -125,7 +129,7 @@ double BM25(int doc_length, const vector<int>& f_d_t, const vector<int>& f_t) {
 }
 
 // DAAT
-void Query(vector<string> query) {
+vector<pair<int, double>> Query(vector<string> query) {
     int top = 15; // choose top 15
     priority_queue<
             pair<double, int>,
@@ -136,23 +140,16 @@ void Query(vector<string> query) {
     vector<StreamReader> readers(n);
     vector<int> termIds(n, 0);
 
-    cout << "get term id" << endl;
     for (int i = 0; i < n; i++) {
         termIds[i] = getTermId(query[i]);
     }
     for (int i = 0; i < n; i++) {
-        cout << query[i] << " " << termIds[i] << endl;
-    }
-    for (int i = 0; i < n; i++) {
         readers[i] = openList(termIds[i]);
     }
-    cout << "list opened" << endl;
     int did = 0;
     while (did < MAXDID) {
         // get next post from shortest list
-        cout << "before : " << did << endl;
         did = nextGEQ(readers[0], did);
-        cout << "get next did" << did << endl;
 
         int d = did;
         for (int i = 1; (i < n) && ((d = nextGEQ(readers[i], did)) == did); i++);
@@ -170,7 +167,6 @@ void Query(vector<string> query) {
 
             // compute BM25
             double score = BM25(doc_length, f_d_t, f_t);
-            cout << "bm 25 score " << score << endl;
 
             pq.emplace(score, did);
             if (pq.size() > top) {
@@ -192,6 +188,11 @@ void Query(vector<string> query) {
         result.emplace_back(cur.second, cur.first);
     }
     reverse(result.begin(), result.end());
+
+    return result;
+}
+
+void outputResult(const vector<pair<int, double>>& result, const vector<string>& query) {
     for (auto pair : result) {
         int uid = pair.first;
         double value = pair.second;
@@ -282,103 +283,3 @@ string getSnippet(const vector<string>& doc, const vector<string>& query, int sh
     }
     return snnipet;
 }
-
-
-//    Query({"student"}, reader);
-//    assert (term_table.size() == index_table.size());
-//    for (int i = 0; i < (int) term_table.size(); i++) {
-//        auto term = term_table[i];
-//        auto index = index_table[i];
-//        assert (term.tid == index.tid);
-//        terms[term.term] = {
-//                index.tid, index.start, index.end, index.number
-//        };
-//    }
-
-//    IndexReader reader;
-
-//struct TermIndex {
-//    int tid;
-//    string term;
-//    int number;
-//    long long start, end;
-//
-//    TermIndex(int tid, const string &term, int number,
-//              long long int start, long long int end) :
-//            tid(tid), term(term), number(number), start(start), end(end) {}
-//};
-
-//void solve(string term, IndexReader& reader, map<int, double>& score) {
-//    reader.openList(term);
-//    int uid = -1;
-//    vector<Doc> docs;
-//    int f_t = 0;
-//    while ((uid = reader.nextGEQ(uid)) != reader.NOT_FOUND) {
-//        int freq = reader.getFreq();
-//        f_t += freq;
-//        docs.emplace_back(uid, freq);
-//    }
-//    reader.closeList(term);
-//    for (Doc doc : docs) {
-//        score[doc.uid] += cosine_measure(reader.getLength(doc.uid), (int) docs.size(), f_t, doc.freq);
-//    }
-//}
-
-//void Query(vector<string> query) {
-//    map<int, double> score;
-//    for (auto term : query) {
-//        solve(term, reader, score);
-//    }
-//    int top = 10;
-//    priority_queue<pair<double, int>> pq;
-//    for (auto pair : score) {
-//        double value = pair.second, uid = pair.first;
-//        if (pq.size() < top) {
-//            pq.emplace(-value, uid);
-//        } else {
-//            if (value > -pq.top().first) {
-//                pq.pop();
-//                pq.emplace(-value, uid);
-//            }
-//        }
-//    }
-//    vector<pair<int, double>> result;
-//    while (pq.size()) {
-//        auto cur = pq.top();
-//        pq.pop();
-//        result.emplace_back(cur.second, -cur.first);
-//    }
-//    reverse(result.begin(), result.end());
-//    for (auto pair : result) {
-//        int uid = pair.first;
-//        double value = pair.second;
-////        string url = reader.getUrl(uid);
-//        string url = url_table[uid].url;
-//        if (url.size() < 4 || url.substr(0, 4) != "http") continue;
-////        auto payload = reader.getPayload(uid);
-//        auto payload = getPayload(uid);
-////        cout << reader.getUrl(pair.first) << " " << value << endl;
-//        cout << url << " " << value << endl;
-//
-//        string snnipet = getSnippet(payload, query);
-//        cout << snnipet << endl;
-////        for (auto word: payload) {
-////            cout << word << " ";
-////        }
-////        cout << endl;
-//    }
-//}
-//    for (auto term : query) {
-//        solve(term, reader, score);
-//    }
-//    for (auto pair : score) {
-//        double value = pair.second, uid = pair.first;
-//        if (pq.size() < top) {
-//            pq.emplace(-value, uid);
-//        } else {
-//            if (value > -pq.top().first) {
-//                pq.pop();
-//                pq.emplace(-value, uid);
-//            }
-//        }
-//    }
