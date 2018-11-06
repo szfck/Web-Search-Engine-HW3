@@ -76,30 +76,33 @@ public:
     vector<Index> indexread();
 };
 
-class IndexReader {
-private:
-    Reader index_bin;
-    Reader content_bin;
-    vector<Term> term_table;
-    vector<Url> url_table;
-    vector<Index> index_table;
-    unordered_map<string, int> terms;
-    unordered_map<int, vector<Doc>> cached;
-    vector<Doc> docs;
-    int pointer;
-
-public:
-    IndexReader();
-    static const int NOT_FOUND = -1;
-
-    int openList(string term);
-    void closeList(string term);
-    int nextGEQ(int uid);
-    int getFreq();
-    int getLength(int uid);
-    string getUrl(int uid);
-    vector<string> getPayload(int uid);
-};
+//class IndexReader {
+//private:
+//    Reader index_bin;
+////    Reader content_bin;
+////    vector<Index> index_table;
+//    vector<Doc> docs;
+//    int pointer;
+//
+////    Reader content_bin;
+////    vector<Term> term_table;
+////    vector<Url> url_table;
+////    unordered_map<string, int> terms;
+////    unordered_map<int, vector<Doc>> cached;
+//
+//public:
+//    IndexReader();
+//    static const int NOT_FOUND = -1;
+//
+//    int openList(string term);
+//    void closeList(string term);
+//    int nextGEQ(int uid);
+//    int getFreq();
+//    int getLength(int uid);
+//    string getUrl(int uid);
+//    vector<string> getPayload(int uid);
+////    int getDocNumber();
+//};
 
 // class TextWriter : public Writer {
 //     public:

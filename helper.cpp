@@ -177,96 +177,100 @@ vector<Index> Reader::indexread() {
     return indexes;
 }
 
-IndexReader::IndexReader() {
-    const string OUTPUT = "../output/";
-    const string index_txt_path = OUTPUT + "intermediate-output-3/" + "index-00000.merge1.txt";
-    const string index_bin_path = OUTPUT + "intermediate-output-3/" + "index-00000.merge1.bin";
-    const string term_table_path = OUTPUT + "term_table.txt";
-    const string url_table_path = OUTPUT + "url_table.txt";
-    const string content_bin_path = OUTPUT + "url_content.bin";
-
-    Reader term_table_reader(term_table_path);
-    term_table = term_table_reader.termread();
-    term_table_reader.close();
-    for (auto term : term_table) {
-        terms[term.term] = term.tid;
-    }
-
-    Reader url_table_reader(url_table_path);
-    url_table = url_table_reader.urlread();
-    url_table_reader.close();
-
-    Reader index_reader(index_txt_path);
-    index_table = index_reader.indexread();
-    index_reader.close();
-
-    index_bin.open(index_bin_path);
-    content_bin.open(content_bin_path);
-}
-
-int IndexReader::openList(string term) {
-    if (terms.find(term) == terms.end()) {
-        cout << "term not found !" << endl;
-        return NOT_FOUND;
-    }
-    int tid = terms[term];
-    if ((int) index_table.size() <= tid) return NOT_FOUND;
-
-    // cached index list
-    if (cached.find(tid) != cached.end()) {
-        docs = cached[tid];
-    } else { // read from binary file
-        docs = index_bin.vreadList(tid,
-                                   index_table[tid].start,
-                                   index_table[tid].end,
-                                   index_table[tid].number);
-
-    }
-    pointer = 0;
-    return (int) docs.size();
-}
-
-void IndexReader::closeList(string term) {
-    if (terms.find(term) == terms.end()) {
-        cout << "term not found !" << endl;
-        return;
-    }
-    int tid = terms[term];
-    docs.clear();
-    pointer = -1;
-}
-
-int IndexReader::nextGEQ(int uid) {
-    if (pointer >= (int) docs.size()) return NOT_FOUND;
-    int next = docs[pointer++].uid;
-    if (uid > next) {
-        cout << "uid : " << uid << " next: " << next << endl;
-    }
-    assert (uid <= next);
-    return next;
-}
-
-int IndexReader::getFreq() {
-    return docs[pointer - 1].freq;
-}
-
-vector<string> IndexReader::getPayload(int uid) {
-    vector<int> list = content_bin.vread(
-            url_table[uid].content_start_byte,
-            url_table[uid].content_end_byte);
-    vector<string> words;
-    for (int tid : list) {
-        words.push_back(term_table[tid].term);
-    }
-    return words;
-//    return {"hello", "world"};
-}
-
-int IndexReader::getLength(int uid) {
-    return url_table[uid].length;
-}
-
-string IndexReader::getUrl(int uid) {
-    return url_table[uid].url;
-}
+//IndexReader::IndexReader() {
+//    const string OUTPUT = "../output/";
+////    const string index_txt_path = OUTPUT + "intermediate-output-3/" + "index-00000.merge1.txt";
+//    const string index_bin_path = OUTPUT + "intermediate-output-3/" + "index-00000.merge1.bin";
+////    const string term_table_path = OUTPUT + "term_table.txt";
+////    const string url_table_path = OUTPUT + "url_table.txt";
+//    const string content_bin_path = OUTPUT + "url_content.bin";
+//
+////    Reader term_table_reader(term_table_path);
+////    term_table = term_table_reader.termread();
+////    term_table_reader.close();
+////    for (auto term : term_table) {
+////        terms[term.term] = term.tid;
+////    }
+//
+////    Reader url_table_reader(url_table_path);
+////    url_table = url_table_reader.urlread();
+////    url_table_reader.close();
+//
+////    Reader index_reader(index_txt_path);
+////    index_table = index_reader.indexread();
+////    index_reader.close();
+//
+//    index_bin.open(index_bin_path);
+//    content_bin.open(content_bin_path);
+//}
+//
+//int IndexReader::openList(string term) {
+//    if (terms.find(term) == terms.end()) {
+//        cout << "term not found !" << endl;
+//        return NOT_FOUND;
+//    }
+//    int tid = terms[term];
+//    if ((int) index_table.size() <= tid) return NOT_FOUND;
+//
+//    // cached index list
+////    if (cached.find(tid) != cached.end()) {
+////        docs = cached[tid];
+////    } else { // read from binary file
+//    docs = index_bin.vreadList(tid,
+//                               index_table[tid].start,
+//                               index_table[tid].end,
+//                               index_table[tid].number);
+//
+////    }
+//    pointer = 0;
+//    return (int) docs.size();
+//}
+//
+//void IndexReader::closeList(string term) {
+//    if (terms.find(term) == terms.end()) {
+//        cout << "term not found !" << endl;
+//        return;
+//    }
+//    int tid = terms[term];
+//    docs.clear();
+//    pointer = -1;
+//}
+//
+////int IndexReader::getDocNumber() {
+////    return url_table.size();
+////}
+//
+//int IndexReader::nextGEQ(int uid) {
+//    if (pointer >= (int) docs.size()) return NOT_FOUND;
+//    int next = docs[pointer++].uid;
+//    if (uid > next) {
+//        cout << "uid : " << uid << " next: " << next << endl;
+//    }
+//    assert (uid <= next);
+//    return next;
+//}
+//
+//int IndexReader::getFreq() {
+//    return docs[pointer - 1].freq;
+//}
+//
+//vector<string> IndexReader::getPayload(int uid) {
+//    vector<int> list = content_bin.vread(
+//            url_table[uid].content_start_byte,
+//            url_table[uid].content_end_byte);
+//    vector<string> words;
+//    for (int tid : list) {
+//        words.push_back(term_table[tid].term);
+//    }
+//    return words;
+////    return {"hello", "world"};
+//}
+//
+//int IndexReader::getLength(int uid) {
+//    return url_table[uid].length;
+//}
+//
+//string IndexReader::getUrl(int uid) {
+//    return url_table[uid].url;
+//}
 
