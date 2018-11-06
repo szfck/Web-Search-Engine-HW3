@@ -114,9 +114,6 @@ void build(int id, Writer& url_content_writer) {
                 }
                 break;
             }
-//            else if (line == END) {
-//                cout << "id: " << id << " url: " << url << " " << line << endl;
-//            }
 
             int pos = 0;
             string term = "";
@@ -149,38 +146,13 @@ void build(int id, Writer& url_content_writer) {
     input_file.close();
 }
 
-//void init_url_and_term_table() {
-//    cout << "init url table ..." << endl;
-//    Reader url_reader(URL_TABLE_PATH);
-//    urls = url_reader.urlread();
-//    url_map.clear();
-//    for (auto url : urls) {
-//        url_map[url.url] = url.uid;
-//    }
-//    url_reader.close();
-//
-//    cout << "init term table ..." << endl;
-//    Reader term_reader(TERM_TABLE_PATH);
-//    terms = term_reader.termread();
-//    term_map.clear();
-//    for (auto term : terms) {
-//        term_map[term.term] = term.tid;
-//    }
-//    term_reader.close();
-//    cout << "ucnt: " << (int) urls.size() << " tcnt: " << (int) terms.size() << endl;
-//}
-
 int main(int argc, char *argv[]) {
     int lower = atoi(argv[1]), upper = atoi(argv[2]);
-//    init_url_and_term_table();
-
-//    int lower = 0, upper = 2;
     cout << "start build index for file [" << lower << " to " << upper << ")" << endl;
 
     Writer url_content_writer(URL_CONTENT_PATH);
     for (int i = lower; i < upper; i++) {
         build(i, url_content_writer);
-//        build(i);
     }
     url_content_writer.close();
 

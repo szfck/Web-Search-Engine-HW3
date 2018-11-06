@@ -37,14 +37,10 @@ void addToQue(int fid, priority_queue<Node>& pq, map<int, vector<Doc>>& mp, Read
     for (auto doc : docs) {
         mp[tid].push_back(doc);
     }
-    // int tid = indexes.getNext(start);
-    // int number = indexes.getNext(start);
-    // auto list = indexes.read(tid, start - 2, start + number, number);
     pq.push(Node(tid, fid));
 }
 
 void output(int tid, map<int, vector<Doc>>& mp, Writer& merged_index, Writer& merged_term_index) {
-    // cout << "output : " << tid << endl;
     long long start = merged_index.getOffset();
     auto& list = mp[tid];
     sort(list.begin(), list.end(), [] (const Doc& doc1, const Doc& doc2) {
@@ -69,7 +65,6 @@ void nway_merge(Reader indexes[], Reader term_indexes[], int n, Writer& merged_i
     }
     while (pq.size()) {
         auto cur = pq.top();
-        // string term = cur.term;
         int tid = cur.tid;
 
         // output merged list for term 
@@ -107,19 +102,11 @@ void merge_(int step, int start, int number, int target) {
             index_path = CUR_OUTPUT + "index-" + getNum(start + j) + ".merge" + to_string(step - 1) + ".bin";
             term_index_path = CUR_OUTPUT + "index-" + getNum(start + j) + ".merge" + to_string(step - 1) + ".txt";
         }
-        // cout << index_path << endl;
-        // cout << term_index_path << endl;
         indexes[j].open(index_path);
         term_indexes[j].open(term_index_path);
-        // term_indexes[j].indexrea
-        // Reader tmp(term_index_path);
-        // tmp.indexread();
     }
-    // cout << "start merging ... " << number << " files" << endl;
     string merge_index_path = CUR_OUTPUT + "index-" + getNum(target) + ".merge" + to_string(step) + ".bin";
     string merge_term_index_path = CUR_OUTPUT + "index-" + getNum(target) + ".merge" + to_string(step) + ".txt";
-    // cout << merge_index_path << endl;
-    // cout << merge_term_index_path << endl;
     Writer merged_index(merge_index_path);
     Writer merged_term_index(merge_term_index_path);
 
@@ -135,24 +122,9 @@ void merge_(int step, int start, int number, int target) {
 }
 int main(int argc, char** argv) {
     int step = atoi(argv[1]);
-//    int step = 1;
     int start = atoi(argv[2]);
     int end = atoi(argv[3]);
     int target = atoi(argv[4]);
     merge_(step, start, end - start, target);
-    // [0, 300) -> [0, 30)
-    // for (int i = 0; i < 300; i += 10) {
-    //     merge_(1, i, 10, i / 10);
-    // }
-    // // [0, 30) -> [0, 6)
-    // for (int i = 0; i < 30; i += 5) {
-    //     merge_(2, i, 5, i / 5);
-    // }
-    // // [0, 6) -> [0, 2)
-    // for (int i = 0; i < 6; i += 3) {
-    //     merge_(3, i, 3, i / 3);
-    // }
-    // // [0, 2) -> [0, 1)
-    // merge_(4, 0, 2, 0);
     return 0;
 }
