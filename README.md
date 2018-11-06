@@ -23,12 +23,26 @@ make
 ./merge 1 0 100 0
 cd ..
 
-# add file to communicate with web
+# add file to communicate with web page
 touch in.txt out.txt
 ```
 
-### Run 
+### Run C++ Engine 
 ```$xslt
 cd build
 ./main
+```
+
+### Run Web Server (Node Express)
+```asm
+cd frontend/server
+npm i
+npm run start
+```
+
+### Run Web Frontend (Angular)
+```asm
+cd frontend
+npm i
+ng serve --open
 ```
