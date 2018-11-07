@@ -1,6 +1,6 @@
 ### Build
 
-```$xslt
+```sh
 mkdir output
 mkdir output/intermediate-output-1
 mkdir output/intermediate-output-2
@@ -28,20 +28,20 @@ touch in.txt out.txt
 ```
 
 ### Run C++ Engine 
-```$xslt
+```sh
 cd build
 ./main
 ```
 
 ### Run Web Server (Node Express)
-```asm
+```sh
 cd frontend/server
 npm i
 npm run start
 ```
 
 ### Run Web Frontend (Angular)
-```asm
+```sh
 cd frontend
 npm i
 ng serve --open

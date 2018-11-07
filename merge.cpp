@@ -20,7 +20,7 @@ struct Node {
     Node(int tid, int fid) : tid(tid), fid(fid) {}
     Node() {}
     bool operator < (const Node& o) const {
-        return tid > o.tid;
+        return tid > o.tid; // sorted by term id
     }
 };
 
@@ -70,7 +70,7 @@ void nway_merge(Reader indexes[], Reader term_indexes[], int n, Writer& merged_i
         // output merged list for term 
         output(tid, mp, merged_index, merged_term_index);
 
-        while (pq.size() && tid == pq.top().tid) {
+        while (pq.size() && tid == pq.top().tid) { // remove all the same term id
             int fid = pq.top().fid;
             pq.pop();
             addToQue(fid, pq, mp, indexes[fid], term_indexes_vec[fid], counter[fid]);
@@ -121,6 +121,7 @@ void merge_(int step, int start, int number, int target) {
     merged_term_index.close();
 }
 int main(int argc, char** argv) {
+    // merge files in [start, end) to target file
     int step = atoi(argv[1]);
     int start = atoi(argv[2]);
     int end = atoi(argv[3]);

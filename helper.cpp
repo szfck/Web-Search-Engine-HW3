@@ -8,6 +8,7 @@
 using namespace std;
 
 // Writer
+
 Writer::Writer() {
     offset = 0;
 }
@@ -168,4 +169,3 @@ vector<Index> Reader::indexread() {
     }
     return indexes;
 }
-

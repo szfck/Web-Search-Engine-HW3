@@ -9,15 +9,10 @@ import {SearchService} from "./search.service";
 })
 export class AppComponent implements OnInit {
   title = 'my search engine';
-  search_text: string = "book";
+  search_text: string = "";
   docs: Doc[] = [];
 
   ngOnInit(): void {
-    this.docs.push({
-      url: "123",
-      score: 12,
-      snippet: "24"
-    });
   }
 
   constructor(

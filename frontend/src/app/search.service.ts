@@ -10,6 +10,7 @@ export class SearchService {
     private http: HttpClient
   ) { }
 
+  // get query result from server
   getSearchResult(query: string): Observable<Doc[]> {
 
     return this.http.get<Doc[]>(`http://localhost:3000/search/?text=${query}`);

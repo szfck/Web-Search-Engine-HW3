@@ -7,9 +7,12 @@
 #include <set>
 #include <unistd.h>
 using namespace std;
+
+// set CMD to false for web user
+// set CMD to true to command line user
 const bool CMD = false;
 
-const unsigned int microseconds = 1000;
+const unsigned int microseconds = 1000; // sleep 1 secs
 const string OUTPUT = "../output/";
 const string term_table_path = OUTPUT + "term_table.txt";
 const string url_table_path = OUTPUT + "url_table.txt";
@@ -54,12 +57,12 @@ int main(int argc, char* argv[]) {
 
     string prequery = "";
     while (true) {
-        usleep(microseconds);
+        usleep(microseconds); // sleep for
         if (CMD) {
             cout << "please input your query in a line, or quit to exit" << endl;
         }
         string query;
-        if (CMD) {
+        if (CMD) { // for command line user
             getline(cin, query);
             if (query == "quit") break;
 
@@ -68,10 +71,11 @@ int main(int argc, char* argv[]) {
             auto result = Query(query_terms);
 
             outputResult(result, query_terms);
-        } else {
+        } else { // for web user
             ifstream in;
             in.open("../in.txt");
             string query;
+            // reader query from in.txt (node server already writen to it)
             getline(in, query);
             in.close();
 
@@ -79,13 +83,19 @@ int main(int argc, char* argv[]) {
                 continue;
             }
 
-            if (query != prequery) {
+            if (query != prequery) { // if it's a new query
                 cout << "get a query " << query << endl;
                 vector<string> query_terms = parseQuery(query);
+
+                // get query result
                 auto result = Query(query_terms);
-                cout << "get result: " << endl;
+
+                cout << "already get result" << endl;
+
                 ofstream out;
                 out.open("../out.txt");
+                // for each found url, output url, bm25 value and snippet to out.txt
+                // node server will read the result from out.txt
                 for (auto pair : result) {
                     int uid = pair.first;
                     double value = pair.second;
@@ -105,6 +115,7 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
+// parse query terms
 vector<string> parseQuery(string query) {
     stringstream ss(query);
     vector<string> query_terms;
@@ -140,20 +151,24 @@ private:
     Reader index_bin;
 };
 
+// open a new streamReader for given term id
 StreamReader openList(int tid) {
     StreamReader streamReader;
     streamReader.open(tid);
     return streamReader;
 }
 
+// close streamReader
 void closeList(StreamReader& streamReader) {
     streamReader.close();
 }
 
+// get freq of uid in streamReader
 int getFreq(StreamReader& streamReader, int uid) {
     return streamReader.docs[uid].freq;
 }
 
+// get next url id which is larger or equal to uid in streamReader
 int nextGEQ(StreamReader& streamReader, int uid) {
     auto next_itr = streamReader.docs.lower_bound(uid);
     if (next_itr == streamReader.docs.end()) {
@@ -178,7 +193,7 @@ double BM25(int doc_length, const vector<int>& f_d_t, const vector<int>& f_t) {
     return sum;
 }
 
-// DAAT
+// DAAT query
 vector<pair<int, double>> Query(vector<string> query) {
     if (cache.find(query) != cache.end()) {
         return cache[query];
@@ -189,7 +204,6 @@ vector<pair<int, double>> Query(vector<string> query) {
             vector<pair<double, int>>,
             greater<pair<double, int>> > pq;
 
-//    int n = query.size();
     vector<int> termIds;
 
     for (int i = 0; i < (int) query.size(); i++) {
@@ -255,6 +269,7 @@ vector<pair<int, double>> Query(vector<string> query) {
     return result;
 }
 
+// output result for command line user
 void outputResult(const vector<pair<int, double>>& result, const vector<string>& query) {
     for (auto pair : result) {
         int uid = pair.first;
@@ -269,6 +284,9 @@ void outputResult(const vector<pair<int, double>>& result, const vector<string>&
     }
 }
 
+// start search engine
+// read term table, url table, index table
+// open reader for content binary file
 void start() {
     cout << "search engine starting ..." << endl;
     Reader term_table_reader(term_table_path);
@@ -312,6 +330,7 @@ vector<string> getPayload(int uid) {
     return words;
 }
 
+// generate snippet
 string getSnippet(const vector<string>& doc, const vector<string>& query, int shift) {
     vector<pair<int, int>> segments;
     set<string> vis;

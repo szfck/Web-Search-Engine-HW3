@@ -55,6 +55,7 @@ string str(long long x) {
     return to_string(x);
 }
 
+// build index for {id}th file
 void build(int id, Writer& url_content_writer) {
     cout << "processing: " << id << endl;
     string id_str = getNum(id);
@@ -85,7 +86,8 @@ void build(int id, Writer& url_content_writer) {
         }
         int uid = url_map[url];
 
-        map<int, int> freq; // for this doc
+        map<int, int> freq; // store freq for this doc
+
         // read doc
 
         long long content_start_byte = url_content_writer.getOffset();
@@ -102,13 +104,14 @@ void build(int id, Writer& url_content_writer) {
                     cout << len << endl;
                     break;
                 }
+                // write doc's content to binary file
                 for (int id : words_id) {
                     url_content_writer.vwrite(id);
                 }
                 long long content_end_byte = url_content_writer.getOffset();
                 urls.emplace_back(uid, url, length, content_start_byte, content_end_byte);
                 url_map[url] = uid;
-                for (auto p : freq) { // in uid
+                for (auto p : freq) { // store a list of {uid, fre} for all term in this doc
                     int tid = p.first, fre = p.second;
                     words[tid].emplace_back(uid, fre);
                 }
@@ -117,6 +120,7 @@ void build(int id, Writer& url_content_writer) {
 
             int pos = 0;
             string term = "";
+            // process one line in doc
             while ((term = getTerm(line, pos)) != "") {
                 if (term_map.find(term) == term_map.end()) {
                     term_map[term] = (int) terms.size();
@@ -132,13 +136,24 @@ void build(int id, Writer& url_content_writer) {
 
     Writer index(CUR_OUTPUT + "index-" + id_str + ".bin");
     Writer term_index(CUR_OUTPUT + "index-" + id_str + ".txt");
-    for (auto& word : words) {
+    for (auto& word : words) { // for each term found in this file
+
+        // record start offset before writing
         long long start = index.getOffset();
+
         int tid = word.first;
         auto& list = word.second;
         int number = (int) list.size();
+
+        // write index list to binary file
+        // format: tid number {doc1, doc2 ... doc128} {freq1, freq2 .. freq128} ...
         index.vwriteList(tid, list);
+
+        // record end offset after writing
         long long end = index.getOffset();
+
+        // write term index table
+        // format: tid start end number
         term_index.swrite(str(tid) + " " + str(start) + " " + str(end) + " " + str(number) + '\n');
     }
     index.close();
@@ -158,6 +173,8 @@ int main(int argc, char *argv[]) {
 
     cout << "write back to url_table..." << endl;
 
+    // write url table
+    // format: uid url length start end
     Writer url_writer(URL_TABLE_PATH);
     for (auto url : urls) {
         url_writer.swrite(str(url.uid) + " " + url.url + " " + str(url.length) +
@@ -165,6 +182,8 @@ int main(int argc, char *argv[]) {
     }
     url_writer.close();
 
+    // write term table
+    // format: tid term
     cout << "write back to term_table..." << endl;
     Writer term_writer(TERM_TABLE_PATH);
     for (auto term : terms) {
